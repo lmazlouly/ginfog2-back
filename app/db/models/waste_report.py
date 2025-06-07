@@ -18,7 +18,7 @@ class WasteReport(Base):
         nullable=False
     )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    date = Column(DateTime, default=datetime.utcnow(), nullable=False)
     
     # Relationship with user
     user = relationship("User", back_populates="waste_reports")
