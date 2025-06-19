@@ -11,7 +11,7 @@ from app.core.security.jwt import create_access_token
 from app.db.repositories.user import UserRepository
 from app.db.session import get_db
 from app.schemas.token import Token
-from app.schemas.user import User, UserCreate
+from app.schemas.user import User, UserCreate, UserUpdate
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -29,6 +29,7 @@ def login_access_token(
         db, email=form_data.username, password=form_data.password
     )
     if not user:
+        print(f"Variable value: {form_data.password}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -90,6 +91,20 @@ def read_users_me(current_user = Depends(get_current_user)) -> Any:
     Get current user
     """
     return current_user
+
+
+@router.put("/me", response_model=User, operation_id="updateProfile")
+def update_users_me(
+    *, 
+    db: Session = Depends(get_db),
+    user_in: UserUpdate,
+    current_user = Depends(get_current_user)
+) -> Any:
+    """
+    Update current user information
+    """
+    user = UserRepository.update(db, db_user=current_user, user_in=user_in)
+    return user
 
 
 @router.post("/logout", operation_id="logout")
