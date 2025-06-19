@@ -63,7 +63,9 @@ class UserRepository:
     def authenticate(db: Session, email: str, password: str) -> Optional[User]:
         user = UserRepository.get_by_email(db, email=email)
         if not user:
-            return None
+            user = UserRepository.get_by_username(db, username=email)
+            if not user:
+                return None
         if not verify_password(password, user.hashed_password):
             return None
         return user
