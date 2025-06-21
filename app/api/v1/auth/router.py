@@ -8,10 +8,11 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_user
 from app.core.config.settings import settings
 from app.core.security.jwt import create_access_token
+from app.core.security.password import verify_password
 from app.db.repositories.user import UserRepository
 from app.db.session import get_db
 from app.schemas.token import Token
-from app.schemas.user import User, UserCreate, UserUpdate
+from app.schemas.user import User, UserCreate, UserUpdate, ChangePasswordRequest
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -114,3 +115,41 @@ def logout(response: Response) -> Any:
     """
     response.delete_cookie(key="access_token")
     return {"status": "success"}
+
+
+@router.post("/change-password", operation_id="changePassword")
+def change_password(
+    *,
+    db: Session = Depends(get_db),
+    password_data: ChangePasswordRequest,
+    current_user = Depends(get_current_user)
+) -> Any:
+    """
+    Change current user password
+    """
+    # Verify current password
+    if not verify_password(password_data.old_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect current password"
+        )
+    
+    # Verify new password confirmation
+    if password_data.new_password != password_data.new_password_confirmation:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password and confirmation do not match"
+        )
+    
+    # Ensure new password is different from old password
+    if password_data.old_password == password_data.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from current password"
+        )
+    
+    # Update password
+    user_update = UserUpdate(password=password_data.new_password)
+    UserRepository.update(db, db_user=current_user, user_in=user_update)
+    
+    return {"status": "success", "message": "Password changed successfully"}

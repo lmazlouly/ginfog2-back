@@ -115,6 +115,11 @@ When the installation finishes, you can run the project using this command:
 uvicorn main:app --reload --port=3005
 ```
 
+OR
+```bash
+.\venv\Scripts\python.exe -m uvicorn main:app --reload --port=3005
+```
+
 ### Step 8: Access the API Documentation
 
 Open your browser and navigate to:

@@ -23,6 +23,13 @@ class UserUpdate(UserBase):
     password: Optional[str] = None
 
 
+# Properties for password change
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+    new_password_confirmation: str
+
+
 class UserInDBBase(UserBase):
     id: Optional[int] = None
 
